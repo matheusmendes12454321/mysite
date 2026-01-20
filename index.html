@@ -3,858 +3,1755 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cronograma de Estudos - Repertório ENEM 2026</title>
+    <title>Controle de Lucro - Venda de Salgados</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Reset e variáveis */
+        :root {
+            --primary: #FF6B6B;
+            --primary-dark: #FF5252;
+            --secondary: #4ECDC4;
+            --success: #1DD1A1;
+            --warning: #FF9F43;
+            --danger: #FF4757;
+            --info: #54A0FF;
+            --dark: #2D3436;
+            --light: #F8F9FA;
+            --gray: #6C757D;
+            --light-gray: #E9ECEF;
+            --border: #DEE2E6;
+            
+            --venda: #1DD1A1;
+            --custo: #FF4757;
+            
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --radius: 10px;
+            --radius-sm: 6px;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3a0ca3;
-            --success-color: #4cc9f0;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-            --gray-color: #6c757d;
-            --humanas-color: #ff6b6b;
-            --linguagens-color: #4ecdc4;
-            --naturezas-color: #1dd1a1;
-            --matematica-color: #feca57;
-            --border-radius: 10px;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         body {
-            background-color: #f5f7ff;
-            color: var(--dark-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: var(--dark);
             line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Layout principal */
+        #app {
+            display: none;
+            min-height: 100vh;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 0 15px;
         }
 
-        header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 30px 0;
-            border-radius: var(--border-radius);
-            margin-bottom: 30px;
-            box-shadow: var(--shadow);
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .current-date {
-            background-color: white;
-            color: var(--dark-color);
-            padding: 15px;
-            border-radius: var(--border-radius);
-            margin: 20px auto;
-            max-width: 500px;
-            box-shadow: var(--shadow);
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .current-date i {
-            color: var(--primary-color);
-            font-size: 1.2rem;
-        }
-
-        .calendar-navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            background-color: white;
-            padding: 15px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        .nav-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .nav-btn:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-        }
-
-        .nav-btn:disabled {
-            background-color: var(--gray-color);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .current-week {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--secondary-color);
-            text-align: center;
-        }
-
-        .week-display {
-            font-size: 1.2rem;
-            color: var(--gray-color);
-            text-align: center;
-            margin-top: 5px;
-        }
-
-        .progress-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .progress-card {
-            background-color: white;
-            padding: 20px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        .progress-card h3 {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            color: var(--dark-color);
-        }
-
-        .progress-card h3 i {
-            font-size: 1.5rem;
-        }
-
-        .humanas h3 i { color: var(--humanas-color); }
-        .linguagens h3 i { color: var(--linguagens-color); }
-        .naturezas h3 i { color: var(--naturezas-color); }
-        .matematica h3 i { color: var(--matematica-color); }
-
-        .progress-bar {
-            height: 10px;
-            background-color: #e9ecef;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 5px;
-            transition: width 0.5s ease;
-        }
-
-        .humanas .progress-fill { background-color: var(--humanas-color); }
-        .linguagens .progress-fill { background-color: var(--linguagens-color); }
-        .naturezas .progress-fill { background-color: var(--naturezas-color); }
-        .matematica .progress-fill { background-color: var(--matematica-color); }
-
-        .topics-list {
-            list-style-type: none;
-        }
-
-        .topic-item {
-            padding: 10px 0;
-            border-bottom: 1px solid #f1f1f1;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .topic-item:last-child {
-            border-bottom: none;
-        }
-
-        .check-btn {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 2px solid var(--gray-color);
-            background-color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .check-btn.checked {
-            background-color: var(--success-color);
-            border-color: var(--success-color);
-        }
-
-        .check-btn.checked i {
-            color: white;
-            font-size: 0.8rem;
-        }
-
-        .check-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .topic-text {
-            flex: 1;
-            margin-left: 15px;
-        }
-
-        .completed {
-            text-decoration: line-through;
-            color: var(--gray-color);
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 40px 0;
-        }
-
-        .control-btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .reset-btn {
-            background-color: #ff6b6b;
-            color: white;
-        }
-
-        .reset-btn:hover {
-            background-color: #ff4757;
-            transform: translateY(-2px);
-        }
-
-        .save-btn {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .save-btn:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-        }
-
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-top: 30px;
-            padding: 20px;
-            background-color: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .stat-label {
-            color: var(--gray-color);
-            font-size: 0.9rem;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            padding: 20px;
-            color: var(--gray-color);
-            font-size: 0.9rem;
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: var(--success-color);
-            color: white;
-            padding: 15px 25px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
+        /* Páginas */
+        .page {
             display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Login Page */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Formulários */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .input-group .form-control {
+            padding-left: 45px;
+        }
+
+        /* Botões */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        /* Alertas */
+        .alert {
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            box-shadow: var(--shadow);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
             z-index: 1000;
-            animation: slideIn 0.3s ease;
         }
 
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .week-container {
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--dark);
+            text-decoration: none;
+        }
+
+        .navbar-brand i {
+            color: var(--primary);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--dark);
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: var(--light-gray);
+            color: var(--primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        /* Dashboard */
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
+            margin: 20px 0;
         }
 
-        .week-card {
-            background-color: white;
-            border-radius: var(--border-radius);
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
             padding: 20px;
             box-shadow: var(--shadow);
-            transition: transform 0.3s ease;
-        }
-
-        .week-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .week-card.active {
-            border-left: 5px solid var(--primary-color);
-        }
-
-        .week-card.past {
-            opacity: 0.8;
-        }
-
-        .week-card.future {
-            opacity: 0.6;
-        }
-
-        .week-title {
-            font-size: 1.3rem;
-            color: var(--secondary-color);
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f1f1f1;
-        }
-
-        .week-subject {
-            margin-bottom: 15px;
-        }
-
-        .subject-title {
-            font-weight: bold;
-            margin-bottom: 5px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 15px;
         }
 
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-venda { background: rgba(29, 209, 161, 0.1); color: var(--venda); }
+        .stat-custo { background: rgba(255, 71, 87, 0.1); color: var(--custo); }
+        .stat-lucro { background: rgba(84, 160, 255, 0.1); color: var(--info); }
+
+        .stat-content h3 {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+
+        .stat-content .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Tabelas */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .table th {
+            background: var(--light-gray);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table tr:hover {
+            background: var(--light);
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-venda {
+            background: rgba(29, 209, 161, 0.1);
+            color: var(--venda);
+        }
+
+        .badge-custo {
+            background: rgba(255, 71, 87, 0.1);
+            color: var(--custo);
+        }
+
+        /* Formulários de registro */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Gráficos */
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        /* Responsividade */
         @media (max-width: 768px) {
-            .calendar-navigation {
+            .navbar .container {
                 flex-direction: column;
                 gap: 15px;
             }
-            
-            .current-week {
-                order: -1;
+
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
             }
-            
-            .controls {
-                flex-direction: column;
+
+            .form-row {
+                grid-template-columns: 1fr;
             }
-            
-            header h1 {
-                font-size: 2rem;
+
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
+
+            .table {
+                font-size: 0.9rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 8px;
+            }
+        }
+
+        /* Utilitários */
+        .text-success { color: var(--success); }
+        .text-danger { color: var(--danger); }
+        .text-center { text-align: center; }
+        .mb-3 { margin-bottom: 15px; }
+        .mb-4 { margin-bottom: 20px; }
+        .mt-3 { margin-top: 15px; }
+        .mt-4 { margin-top: 20px; }
+
+        /* Esconder elementos */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-calendar-alt"></i> Cronograma de Estudos ENEM 2026</h1>
-            <p>Transforme meses em semanas e acompanhe seu progresso para o ENEM 2026. Seu progresso é salvo automaticamente no navegador.</p>
-        </header>
-
-        <div class="current-date">
-            <i class="fas fa-calendar-day"></i>
-            <span id="current-date">Carregando data atual...</span>
-        </div>
-
-        <div class="calendar-navigation">
-            <button id="prev-week" class="nav-btn">
-                <i class="fas fa-chevron-left"></i> Semana Anterior
-            </button>
-            
-            <div>
-                <div class="current-week" id="current-week">Semana 1: JANEIRO</div>
-                <div class="week-display" id="week-display">01 a 07 de Janeiro de 2026</div>
+    <!-- Página de Login -->
+    <div id="loginPage" class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <i class="fas fa-utensils"></i>
+                <h1>Controle de Salgados</h1>
+                <p>Gerencie suas vendas, custos e lucro</p>
             </div>
-            
-            <button id="next-week" class="nav-btn">
-                Próxima Semana <i class="fas fa-chevron-right"></i>
-            </button>
-        </div>
 
-        <div class="week-container" id="week-container">
-            <!-- Conteúdo das semanas será inserido via JavaScript -->
-        </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" class="form-control" placeholder="seu@email.com" required>
+                    </div>
+                </div>
 
-        <div class="controls">
-            <button id="reset-btn" class="control-btn reset-btn">
-                <i class="fas fa-redo"></i> Reiniciar Progresso
-            </button>
-            <button id="save-btn" class="control-btn save-btn">
-                <i class="fas fa-save"></i> Salvar Checkpoint
-            </button>
-        </div>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" class="form-control" placeholder="Sua senha" required>
+                    </div>
+                </div>
 
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-number" id="total-topics">0</div>
-                <div class="stat-label">Total de Tópicos</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="completed-topics">0</div>
-                <div class="stat-label">Tópicos Concluídos</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="completion-rate">0%</div>
-                <div class="stat-label">Taxa de Conclusão</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="current-week-number">1</div>
-                <div class="stat-label">Semana Atual</div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+
+                <div class="alert alert-info mt-3" id="loginMessage" style="display: none;"></div>
+            </form>
+
+            <div class="mt-4">
+                <p class="text-center">Não tem conta? Use os dados abaixo para testar:</p>
+                <div class="alert alert-info">
+                    <strong>E-mail:</strong> teste@salgados.com<br>
+                    <strong>Senha:</strong> 123456
+                </div>
             </div>
         </div>
-
-        <footer>
-            <p>Cronograma baseado no repertório ENEM 2026 • Progresso salvo localmente no navegador</p>
-            <p>Desenvolvido para estudo • Dados atualizados em tempo real</p>
-        </footer>
     </div>
 
-    <div class="notification" id="notification">
-        Progresso salvo com sucesso!
+    <!-- Aplicação Principal (aparece após login) -->
+    <div id="app">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="container">
+                <a href="#" class="navbar-brand" onclick="showPage('dashboard')">
+                    <i class="fas fa-utensils"></i>
+                    Controle Salgados
+                </a>
+
+                <ul class="nav-menu">
+                    <li><a href="#" class="nav-link active" onclick="showPage('dashboard')">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a></li>
+                    <li><a href="#" class="nav-link" onclick="showPage('vendas')">
+                        <i class="fas fa-cash-register"></i> Vendas
+                    </a></li>
+                    <li><a href="#" class="nav-link" onclick="showPage('custos')">
+                        <i class="fas fa-shopping-cart"></i> Custos
+                    </a></li>
+                    <li><a href="#" class="nav-link" onclick="showPage('estoque')">
+                        <i class="fas fa-box"></i> Estoque
+                    </a></li>
+                    <li><a href="#" class="nav-link" onclick="showPage('relatorios')">
+                        <i class="fas fa-chart-bar"></i> Relatórios
+                    </a></li>
+                </ul>
+
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span id="userName">Usuário</span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <!-- Página: Dashboard -->
+            <div id="dashboardPage" class="page active">
+                <div class="mb-4">
+                    <h1 class="card-title"><i class="fas fa-home"></i> Dashboard</h1>
+                    <p id="currentDate" class="text-center"></p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-venda">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Vendas do Mês</h3>
+                            <div class="value" id="totalVendas">R$ 0,00</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon stat-custo">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Custos do Mês</h3>
+                            <div class="value" id="totalCustos">R$ 0,00</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon stat-lucro">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Lucro do Mês</h3>
+                            <div class="value" id="totalLucro">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-history"></i> Transações Recentes</h2>
+                        <button class="btn btn-primary" onclick="showPage('vendas')">
+                            <i class="fas fa-plus"></i> Nova Venda
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" id="recentTransactions">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Transações serão inseridas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-chart-pie"></i> Distribuição de Custos</h2>
+                    <div class="chart-container">
+                        <canvas id="custosChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Página: Vendas -->
+            <div id="vendasPage" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h1 class="card-title"><i class="fas fa-cash-register"></i> Registrar Venda</h1>
+                    </div>
+
+                    <form id="vendaForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vendaProduto">Produto</label>
+                                <select id="vendaProduto" class="form-control" required>
+                                    <option value="">Selecione um produto</option>
+                                    <option value="Coxinha">Coxinha - R$ 5,00</option>
+                                    <option value="Empada">Empada - R$ 4,50</option>
+                                    <option value="Rissole">Rissole - R$ 5,00</option>
+                                    <option value="Kibe">Kibe - R$ 4,00</option>
+                                    <option value="Pastel">Pastel - R$ 7,00</option>
+                                    <option value="Esfiha">Esfiha - R$ 3,50</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vendaQuantidade">Quantidade</label>
+                                <input type="number" id="vendaQuantidade" class="form-control" min="1" value="1" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vendaPreco">Preço Unitário (R$)</label>
+                                <input type="number" id="vendaPreco" class="form-control" min="0" step="0.01" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vendaData">Data</label>
+                                <input type="date" id="vendaData" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="vendaDescricao">Descrição (opcional)</label>
+                            <textarea id="vendaDescricao" class="form-control" rows="3" placeholder="Ex: Venda para festa, delivery, etc."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Valor Total: <span id="vendaTotal" class="text-success">R$ 0,00</span></label>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Registrar Venda
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card mt-4">
+                    <h2 class="card-title"><i class="fas fa-list"></i> Histórico de Vendas</h2>
+                    <div class="table-responsive">
+                        <table class="table" id="vendasTable">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Produto</th>
+                                    <th>Quantidade</th>
+                                    <th>Valor Unit.</th>
+                                    <th>Total</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Vendas serão inseridas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Página: Custos -->
+            <div id="custosPage" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h1 class="card-title"><i class="fas fa-shopping-cart"></i> Registrar Custo</h1>
+                    </div>
+
+                    <form id="custoForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="custoCategoria">Categoria</label>
+                                <select id="custoCategoria" class="form-control" required>
+                                    <option value="">Selecione uma categoria</option>
+                                    <option value="Ingredientes">Ingredientes</option>
+                                    <option value="Embalagens">Embalagens</option>
+                                    <option value="Gás/Energia">Gás/Energia</option>
+                                    <option value="Transporte">Transporte</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="custoValor">Valor (R$)</label>
+                                <input type="number" id="custoValor" class="form-control" min="0" step="0.01" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="custoDescricao">Descrição</label>
+                                <input type="text" id="custoDescricao" class="form-control" placeholder="Ex: Compra de farinha, óleo, etc." required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="custoData">Data</label>
+                                <input type="date" id="custoData" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="custoQuantidade">Quantidade (opcional)</label>
+                            <input type="text" id="custoQuantidade" class="form-control" placeholder="Ex: 5 kg, 10 unidades">
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Registrar Custo
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card mt-4">
+                    <h2 class="card-title"><i class="fas fa-list"></i> Histórico de Custos</h2>
+                    <div class="table-responsive">
+                        <table class="table" id="custosTable">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Categoria</th>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Custos serão inseridos aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Página: Estoque -->
+            <div id="estoquePage" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h1 class="card-title"><i class="fas fa-box"></i> Controle de Estoque</h1>
+                        <button class="btn btn-primary" onclick="openModal('estoqueModal')">
+                            <i class="fas fa-plus"></i> Adicionar Item
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table" id="estoqueTable">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantidade</th>
+                                    <th>Unidade</th>
+                                    <th>Custo Médio</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Itens de estoque serão inseridos aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <h2 class="card-title"><i class="fas fa-exclamation-triangle"></i> Itens com Baixo Estoque</h2>
+                    <div class="table-responsive">
+                        <table class="table" id="alertaEstoqueTable">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantidade Atual</th>
+                                    <th>Mínimo Recomendado</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Alertas serão inseridos aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Página: Relatórios -->
+            <div id="relatoriosPage" class="page">
+                <div class="card">
+                    <h1 class="card-title"><i class="fas fa-chart-bar"></i> Relatórios</h1>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dataInicio">Data Início</label>
+                            <input type="date" id="dataInicio" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="dataFim">Data Fim</label>
+                            <input type="date" id="dataFim" class="form-control">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="gerarRelatorio()">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportarRelatorio()">
+                        <i class="fas fa-file-export"></i> Exportar
+                    </button>
+                </div>
+
+                <div class="card mt-4">
+                    <h2 class="card-title"><i class="fas fa-chart-line"></i> Evolução do Lucro</h2>
+                    <div class="chart-container">
+                        <canvas id="evolucaoLucroChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <h2 class="card-title"><i class="fas fa-table"></i> Resumo Financeiro</h2>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Período</th>
+                                    <th>Total Vendas</th>
+                                    <th>Total Custos</th>
+                                    <th>Lucro</th>
+                                    <th>Margem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resumoFinanceiro">
+                                <!-- Dados serão inseridos aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Estoque -->
+        <div id="estoqueModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-box"></i> Adicionar Item ao Estoque</h3>
+                    <button class="close-modal" onclick="closeModal('estoqueModal')">&times;</button>
+                </div>
+                <form id="estoqueForm">
+                    <div class="form-group">
+                        <label for="itemNome">Nome do Item</label>
+                        <input type="text" id="itemNome" class="form-control" placeholder="Ex: Farinha de Trigo" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="itemQuantidade">Quantidade</label>
+                            <input type="number" id="itemQuantidade" class="form-control" min="0" step="0.001" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="itemUnidade">Unidade</label>
+                            <select id="itemUnidade" class="form-control" required>
+                                <option value="kg">kg</option>
+                                <option value="g">g</option>
+                                <option value="litro">litro</option>
+                                <option value="ml">ml</option>
+                                <option value="unidade">unidade</option>
+                                <option value="pacote">pacote</option>
+                                <option value="caixa">caixa</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="itemCusto">Custo Unitário (R$)</label>
+                            <input type="number" id="itemCusto" class="form-control" min="0" step="0.01">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="itemMinimo">Quantidade Mínima</label>
+                            <input type="number" id="itemMinimo" class="form-control" min="0" step="0.001">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Salvar Item
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Dados do cronograma
-        const scheduleData = {
-            "1": {
-                month: "JANEIRO",
-                startDate: "2026-01-01",
-                endDate: "2026-01-07",
-                subjects: {
-                    "Humanas": ["Brasil Colonial", "Grécia Antiga", "Roma Antiga", "Cartografia", "Filosofia Clássica"],
-                    "Linguagens": ["Língua e Linguagem", "Funções da Linguagem", "Figuras da Linguagem", "Fenômenos Linguísticos"],
-                    "Naturezas": ["Ecologia", "Cinemática", "Ligações Químicas"],
-                    "Matemática": ["Razão", "Proporção", "Regra de 03 simples", "Regra de 03 composta"]
-                }
-            },
-            "2": {
-                month: "FEVEREIRO",
-                startDate: "2026-01-08",
-                endDate: "2026-01-14",
-                subjects: {
-                    "Humanas": ["Crise Colonial", "Outras civilizações antigas", "Início da Idade Média", "Climatologia", "Filosofia Helenística"],
-                    "Linguagens": ["Tipos e gêneros textuais", "Interpretação de texto", "Escolas Antigas da Literatura", "Arte na Idade Média"],
-                    "Naturezas": ["Citologia", "Cinemática", "Dinâmica", "Reações Químicas"],
-                    "Matemática": ["Escala", "Porcentagem", "Conjuntos Numéricos"]
-                }
-            },
-            "3": {
-                month: "MARÇO",
-                startDate: "2026-01-15",
-                endDate: "2026-01-21",
-                subjects: {
-                    "Humanas": ["Primeiro Reinado, Período Regencial e Segundo Reinado", "Idade Média", "Climatologia", "Filósofos Medievais"],
-                    "Linguagens": ["Barroco, Arcadismo, Romantismo", "Realismo", "Naturalismo"],
-                    "Naturezas": ["Citogenética, Microbiologia", "Dinâmica e Óptica", "Química Básica, Radioatividade", "Funções Inorgânicas"],
-                    "Matemática": ["Geometria Plana", "Função de 1º Grau"]
-                }
-            },
-            "4": {
-                month: "ABRIL",
-                startDate: "2026-01-22",
-                endDate: "2026-01-28",
-                subjects: {
-                    "Humanas": ["República da Espada, República Oligárquica", "Idade Moderna, parte I", "Geologia, Hidrografia e Geografia Ambiental", "Filosofia Moderna"],
-                    "Linguagens": ["Parnasianismo; Simbolismo; Pré-Modernismo", "Vanguardas Europeias", "Modernismo – 1º Geração", "Modernismo – 2º Geração"],
-                    "Naturezas": ["Microbiologia", "Citogenética e Saúde Humana", "Trabalho e Energia, Dinâmica e Ondulatória", "Estequiometria e Gases"],
-                    "Matemática": ["Função do Segundo Grau", "Geometria Plana"]
-                }
-            },
-            "5": {
-                month: "MAIO",
-                startDate: "2026-01-29",
-                endDate: "2026-02-04",
-                subjects: {
-                    "Humanas": ["Era Vargas", "Revolução de Avis", "Idade Moderna, parte II", "Biosfera", "Filosofia Moderna"],
-                    "Linguagens": ["Modernismo – 3º Geração", "Literatura Contemporânea", "Arte Antiga"],
-                    "Naturezas": ["Embriologia; Histologia; Vertebrados", "Termologia; Cinética Química", "Equilíbrio Químico; Eletroquímica"],
-                    "Matemática": ["Função Exponencial", "Geometria Espacial", "P.A."]
-                }
-            },
-            "6": {
-                month: "JUNHO",
-                startDate: "2026-02-05",
-                endDate: "2026-02-11",
-                subjects: {
-                    "Humanas": ["República Liberal e Ditadura Militar", "Revoluções na Europa", "Demografia; Urbanização", "Filosofia Contemporânea"],
-                    "Linguagens": ["Semana da Arte Moderna", "Realismo; Impressionismo", "Pós-Impressionismo; Expressionismo Alemão", "Futurismo, Cubismo e Surrealismo"],
-                    "Naturezas": ["Embriologia; Histologia; Vertebrados", "Termologia; Cinética Química", "Equilíbrio Químico; Eletroquímica"],
-                    "Matemática": ["Função Exponencial", "Geometria Espacial", "P.A."]
-                }
-            },
-            "7": {
-                month: "JULHO",
-                startDate: "2026-02-12",
-                endDate: "2026-02-18",
-                subjects: {
-                    "Humanas": ["Idade Contemporânea – parte I", "Globalização", "Geopolítica", "Geografia Agrária", "Sociologia Política"],
-                    "Linguagens": ["Dadaísmo; Pop Art", "Minimalismo; Arte Conceitual", "Body art", "Performance na Arte"],
-                    "Naturezas": ["Evolução; Fisiologia", "Eletrostática; Eletrodinâmica", "Química Orgânica", "Funções Orgânicas"],
-                    "Matemática": ["Análise Combinatória", "Probabilidade", "P.G."]
-                }
-            },
-            "8": {
-                month: "AGOSTO",
-                startDate: "2026-02-19",
-                endDate: "2026-02-25",
-                subjects: {
-                    "Humanas": ["Idade Contemporânea III", "Transportes; Indústria", "Economia", "Tripé da Sociologia"],
-                    "Linguagens": ["Dadaísmo; Pop Art", "Minimalismo", "Arte Conceitual; Body art", "Performance na Arte"],
-                    "Naturezas": ["Genética", "Botânica", "Eletrodinâmica", "Isomeria", "Polímeros"],
-                    "Matemática": ["Análise Combinatória", "Probabilidade", "Estatística"]
-                }
-            },
-            "9": {
-                month: "SETEMBRO",
-                startDate: "2026-02-26",
-                endDate: "2026-03-04",
-                subjects: {
-                    "Humanas": ["Idade Contemporânea III", "Urbanização", "Geopolítica", "Globalização", "Cultura e Estratificação Social"],
-                    "Linguagens": ["Escolas Modernas e Contemporâneas", "Revisão geral"],
-                    "Naturezas": ["Genética", "Eng. Genética; Botânica", "Magnetismo; Reações Orgânicas", "Química Ambiental"],
-                    "Matemática": ["Logaritmo", "Matrizes"]
-                }
-            },
-            "10": {
-                month: "OUTUBRO/NOVEMBRO",
-                startDate: "2026-03-05",
-                endDate: "2026-03-11",
-                subjects: {
-                    "Humanas": ["Revisão Geral com padrões Enem"],
-                    "Linguagens": ["Revisão Geral com padrões Enem"],
-                    "Naturezas": ["Revisão Geral com padrões Enem"],
-                    "Matemática": ["Geometria Analítica", "Trigonometria", "Revisão Geral com padrões Enem"]
-                }
+        // Sistema de Banco de Dados Local (LocalStorage)
+        class Database {
+            constructor() {
+                this.keyPrefix = 'controle_salgados_';
+                this.loadData();
             }
-        };
 
-        // Estado da aplicação
-        let currentWeek = 1;
-        let completedTopics = {};
-        
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', function() {
-            // Configurar data atual
-            const now = new Date();
-            const today = new Date(2026, 0, 18); // 18 de janeiro de 2026
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('current-date').textContent = today.toLocaleDateString('pt-BR', options);
-            
-            // Determinar semana atual baseada na data
-            currentWeek = determineCurrentWeek(today);
-            
-            // Carregar progresso salvo
-            loadProgress();
-            
-            // Renderizar semana atual
-            renderWeek(currentWeek);
-            
-            // Configurar eventos
-            setupEventListeners();
-            
-            // Atualizar estatísticas
-            updateStats();
-        });
-        
-        // Determinar a semana atual baseada na data
-        function determineCurrentWeek(today) {
-            for (let week = 1; week <= 10; week++) {
-                const weekData = scheduleData[week];
-                const startDate = new Date(weekData.startDate);
-                const endDate = new Date(weekData.endDate);
-                
-                if (today >= startDate && today <= endDate) {
-                    return week;
-                }
-            }
-            
-            // Se a data atual for antes da primeira semana, retorna a primeira
-            const firstWeekStart = new Date(scheduleData["1"].startDate);
-            if (today < firstWeekStart) {
-                return 1;
-            }
-            
-            // Se a data atual for depois da última semana, retorna a última
-            return 10;
-        }
-        
-        // Renderizar a semana atual
-        function renderWeek(weekNumber) {
-            const weekData = scheduleData[weekNumber];
-            const weekContainer = document.getElementById('week-container');
-            
-            // Atualizar título da semana
-            document.getElementById('current-week').textContent = `Semana ${weekNumber}: ${weekData.month}`;
-            document.getElementById('current-week-number').textContent = weekNumber;
-            
-            // Formatar datas
-            const startDate = new Date(weekData.startDate);
-            const endDate = new Date(weekData.endDate);
-            const options = { day: '2-digit', month: 'long', year: 'numeric' };
-            const startFormatted = startDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
-            const endFormatted = endDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
-            
-            document.getElementById('week-display').textContent = `${startFormatted} a ${endFormatted} de ${endDate.getFullYear()}`;
-            
-            // Gerar conteúdo da semana
-            let weekHTML = '';
-            
-            for (const [subject, topics] of Object.entries(weekData.subjects)) {
-                let subjectIcon = '';
-                let subjectClass = '';
-                
-                switch(subject) {
-                    case 'Humanas':
-                        subjectIcon = '<i class="fas fa-landmark"></i>';
-                        subjectClass = 'humanas';
-                        break;
-                    case 'Linguagens':
-                        subjectIcon = '<i class="fas fa-book"></i>';
-                        subjectClass = 'linguagens';
-                        break;
-                    case 'Naturezas':
-                        subjectIcon = '<i class="fas fa-flask"></i>';
-                        subjectClass = 'naturezas';
-                        break;
-                    case 'Matemática':
-                        subjectIcon = '<i class="fas fa-calculator"></i>';
-                        subjectClass = 'matematica';
-                        break;
+            loadData() {
+                // Inicializar dados se não existirem
+                if (!localStorage.getItem(this.keyPrefix + 'vendas')) {
+                    this.resetData();
                 }
                 
-                weekHTML += `
-                    <div class="week-card ${subjectClass} ${weekNumber < currentWeek ? 'past' : weekNumber > currentWeek ? 'future' : 'active'}">
-                        <div class="week-title">${subjectIcon} ${subject}</div>
-                        <div class="week-subject">
-                            <ul class="topics-list">
-                                ${topics.map(topic => {
-                                    const topicId = `week${weekNumber}_${subject}_${topic.replace(/\s+/g, '_')}`;
-                                    const isChecked = completedTopics[topicId] || false;
-                                    
-                                    return `
-                                        <li class="topic-item">
-                                            <button class="check-btn ${isChecked ? 'checked' : ''}" data-id="${topicId}">
-                                                ${isChecked ? '<i class="fas fa-check"></i>' : ''}
-                                            </button>
-                                            <span class="topic-text ${isChecked ? 'completed' : ''}">${topic}</span>
-                                        </li>
-                                    `;
-                                }).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                `;
+                this.vendas = JSON.parse(localStorage.getItem(this.keyPrefix + 'vendas')) || [];
+                this.custos = JSON.parse(localStorage.getItem(this.keyPrefix + 'custos')) || [];
+                this.estoque = JSON.parse(localStorage.getItem(this.keyPrefix + 'estoque')) || [];
+                this.user = JSON.parse(localStorage.getItem(this.keyPrefix + 'user')) || null;
             }
-            
-            weekContainer.innerHTML = weekHTML;
-            
-            // Atualizar botões de navegação
-            updateNavigationButtons();
-            
-            // Adicionar eventos aos botões de check
-            document.querySelectorAll('.check-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const topicId = this.getAttribute('data-id');
-                    toggleTopicCompletion(topicId);
+
+            resetData() {
+                // Dados iniciais de exemplo
+                const estoqueInicial = [
+                    { id: 1, nome: 'Farinha de Trigo', quantidade: 10, unidade: 'kg', custo: 5.50, minimo: 2 },
+                    { id: 2, nome: 'Óleo', quantidade: 5, unidade: 'litro', custo: 8.00, minimo: 1 },
+                    { id: 3, nome: 'Frango', quantidade: 3, unidade: 'kg', custo: 12.00, minimo: 1 },
+                    { id: 4, nome: 'Queijo', quantidade: 2, unidade: 'kg', custo: 25.00, minimo: 0.5 },
+                    { id: 5, nome: 'Embalagens', quantidade: 100, unidade: 'unidade', custo: 0.10, minimo: 20 }
+                ];
+
+                localStorage.setItem(this.keyPrefix + 'vendas', JSON.stringify([]));
+                localStorage.setItem(this.keyPrefix + 'custos', JSON.stringify([]));
+                localStorage.setItem(this.keyPrefix + 'estoque', JSON.stringify(estoqueInicial));
+                localStorage.setItem(this.keyPrefix + 'user', JSON.stringify(null));
+            }
+
+            save() {
+                localStorage.setItem(this.keyPrefix + 'vendas', JSON.stringify(this.vendas));
+                localStorage.setItem(this.keyPrefix + 'custos', JSON.stringify(this.custos));
+                localStorage.setItem(this.keyPrefix + 'estoque', JSON.stringify(this.estoque));
+                localStorage.setItem(this.keyPrefix + 'user', JSON.stringify(this.user));
+            }
+
+            // Métodos para Vendas
+            addVenda(venda) {
+                venda.id = Date.now();
+                venda.tipo = 'venda';
+                venda.data = venda.data || new Date().toISOString().split('T')[0];
+                this.vendas.push(venda);
+                this.save();
+                return venda;
+            }
+
+            getVendas() {
+                return this.vendas.sort((a, b) => new Date(b.data) - new Date(a.data));
+            }
+
+            deleteVenda(id) {
+                this.vendas = this.vendas.filter(v => v.id !== id);
+                this.save();
+            }
+
+            // Métodos para Custos
+            addCusto(custo) {
+                custo.id = Date.now();
+                custo.tipo = 'custo';
+                custo.data = custo.data || new Date().toISOString().split('T')[0];
+                this.custos.push(custo);
+                this.save();
+                return custo;
+            }
+
+            getCustos() {
+                return this.custos.sort((a, b) => new Date(b.data) - new Date(a.data));
+            }
+
+            deleteCusto(id) {
+                this.custos = this.custos.filter(c => c.id !== id);
+                this.save();
+            }
+
+            // Métodos para Estoque
+            addItemEstoque(item) {
+                item.id = Date.now();
+                this.estoque.push(item);
+                this.save();
+                return item;
+            }
+
+            getEstoque() {
+                return this.estoque;
+            }
+
+            updateEstoque(id, updates) {
+                const index = this.estoque.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    this.estoque[index] = { ...this.estoque[index], ...updates };
+                    this.save();
+                }
+            }
+
+            deleteItemEstoque(id) {
+                this.estoque = this.estoque.filter(item => item.id !== id);
+                this.save();
+            }
+
+            // Métodos para Usuário
+            setUser(user) {
+                this.user = user;
+                this.save();
+            }
+
+            getUser() {
+                return this.user;
+            }
+
+            clearUser() {
+                this.user = null;
+                this.save();
+            }
+
+            // Métodos para Relatórios
+            getVendasPorPeriodo(inicio, fim) {
+                return this.vendas.filter(venda => {
+                    const dataVenda = new Date(venda.data);
+                    return (!inicio || dataVenda >= new Date(inicio)) && 
+                           (!fim || dataVenda <= new Date(fim));
                 });
-            });
-        }
-        
-        // Alternar conclusão de tópico
-        function toggleTopicCompletion(topicId) {
-            completedTopics[topicId] = !completedTopics[topicId];
-            
-            // Atualizar UI
-            const btn = document.querySelector(`.check-btn[data-id="${topicId}"]`);
-            const text = btn.closest('.topic-item').querySelector('.topic-text');
-            
-            if (completedTopics[topicId]) {
-                btn.classList.add('checked');
-                btn.innerHTML = '<i class="fas fa-check"></i>';
-                text.classList.add('completed');
-            } else {
-                btn.classList.remove('checked');
-                btn.innerHTML = '';
-                text.classList.remove('completed');
             }
-            
-            // Atualizar estatísticas
-            updateStats();
-            
-            // Salvar progresso automaticamente
-            saveProgress();
+
+            getCustosPorPeriodo(inicio, fim) {
+                return this.custos.filter(custo => {
+                    const dataCusto = new Date(custo.data);
+                    return (!inicio || dataCusto >= new Date(inicio)) && 
+                           (!fim || dataCusto <= new Date(fim));
+                });
+            }
         }
-        
-        // Atualizar estatísticas
-        function updateStats() {
-            // Calcular total de tópicos
-            let totalTopics = 0;
-            let completedCount = 0;
-            
-            for (let week = 1; week <= 10; week++) {
-                const weekData = scheduleData[week];
+
+        // Inicializar banco de dados
+        const db = new Database();
+
+        // Sistema de Autenticação Simples
+        class Auth {
+            constructor() {
+                this.currentUser = db.getUser();
+            }
+
+            async login(email, password) {
+                // Sistema de autenticação simples para demonstração
+                if (email === 'teste@salgados.com' && password === '123456') {
+                    const user = {
+                        id: 1,
+                        email: email,
+                        name: 'Teste Usuário',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    db.setUser(user);
+                    this.currentUser = user;
+                    return { success: true, user };
+                }
                 
-                for (const [subject, topics] of Object.entries(weekData.subjects)) {
-                    totalTopics += topics.length;
-                    
-                    // Contar tópicos concluídos desta semana
-                    topics.forEach(topic => {
-                        const topicId = `week${week}_${subject}_${topic.replace(/\s+/g, '_')}`;
-                        if (completedTopics[topicId]) {
-                            completedCount++;
-                        }
-                    });
-                }
+                return { success: false, error: 'E-mail ou senha incorretos' };
+            }
+
+            logout() {
+                db.clearUser();
+                this.currentUser = null;
+            }
+
+            isAuthenticated() {
+                return this.currentUser !== null;
+            }
+
+            getUser() {
+                return this.currentUser;
+            }
+        }
+
+        const auth = new Auth();
+
+        // Gerenciamento de Páginas
+        function showPage(pageId) {
+            // Atualizar menu ativo
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Mostrar página selecionada
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId + 'Page').classList.add('active');
+
+            // Carregar dados da página
+            switch(pageId) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'vendas':
+                    loadVendas();
+                    break;
+                case 'custos':
+                    loadCustos();
+                    break;
+                case 'estoque':
+                    loadEstoque();
+                    break;
+                case 'relatorios':
+                    loadRelatorios();
+                    break;
+            }
+        }
+
+        // Sistema de Modal
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Formatação de Valores
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        // Dashboard
+        function loadDashboard() {
+            // Atualizar data atual
+            const now = new Date();
+            document.getElementById('currentDate').textContent = 
+                now.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Calcular totais
+            const vendas = db.getVendas();
+            const custos = db.getCustos();
+            
+            const totalVendas = vendas.reduce((sum, venda) => sum + (venda.valor * venda.quantidade), 0);
+            const totalCustos = custos.reduce((sum, custo) => sum + parseFloat(custo.valor), 0);
+            const totalLucro = totalVendas - totalCustos;
+
+            // Atualizar cards
+            document.getElementById('totalVendas').textContent = formatCurrency(totalVendas);
+            document.getElementById('totalCustos').textContent = formatCurrency(totalCustos);
+            document.getElementById('totalLucro').textContent = formatCurrency(totalLucro);
+
+            // Carregar transações recentes
+            loadRecentTransactions();
+            
+            // Carregar gráfico de custos
+            loadCustosChart();
+        }
+
+        function loadRecentTransactions() {
+            const tbody = document.querySelector('#recentTransactions tbody');
+            tbody.innerHTML = '';
+
+            const transacoes = [
+                ...db.getVendas().slice(0, 5).map(v => ({ ...v, tipo: 'venda' })),
+                ...db.getCustos().slice(0, 3).map(c => ({ ...c, tipo: 'custo' }))
+            ].sort((a, b) => new Date(b.data) - new Date(a.data)).slice(0, 8);
+
+            transacoes.forEach(transacao => {
+                const row = document.createElement('tr');
+                
+                const valorFormatado = transacao.tipo === 'venda' 
+                    ? formatCurrency(transacao.valor * transacao.quantidade)
+                    : formatCurrency(transacao.valor);
+
+                row.innerHTML = `
+                    <td>${formatDate(transacao.data)}</td>
+                    <td><span class="badge ${transacao.tipo === 'venda' ? 'badge-venda' : 'badge-custo'}">
+                        ${transacao.tipo === 'venda' ? 'Venda' : 'Custo'}
+                    </span></td>
+                    <td>${transacao.descricao || transacao.produto || transacao.categoria}</td>
+                    <td class="${transacao.tipo === 'venda' ? 'text-success' : 'text-danger'}">
+                        ${transacao.tipo === 'venda' ? '+' : '-'} ${valorFormatado}
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function loadCustosChart() {
+            const custos = db.getCustos();
+            const categorias = {};
+            
+            custos.forEach(custo => {
+                categorias[custo.categoria] = (categorias[custo.categoria] || 0) + parseFloat(custo.valor);
+            });
+
+            const ctx = document.getElementById('custosChart').getContext('2d');
+            
+            if (window.custosChart) {
+                window.custosChart.destroy();
             }
             
-            // Atualizar UI
-            document.getElementById('total-topics').textContent = totalTopics;
-            document.getElementById('completed-topics').textContent = completedCount;
-            document.getElementById('completion-rate').textContent = totalTopics > 0 ? `${Math.round((completedCount / totalTopics) * 100)}%` : '0%';
-        }
-        
-        // Atualizar botões de navegação
-        function updateNavigationButtons() {
-            document.getElementById('prev-week').disabled = currentWeek <= 1;
-            document.getElementById('next-week').disabled = currentWeek >= 10;
-        }
-        
-        // Configurar eventos
-        function setupEventListeners() {
-            // Navegação entre semanas
-            document.getElementById('prev-week').addEventListener('click', function() {
-                if (currentWeek > 1) {
-                    currentWeek--;
-                    renderWeek(currentWeek);
-                }
-            });
-            
-            document.getElementById('next-week').addEventListener('click', function() {
-                if (currentWeek < 10) {
-                    currentWeek++;
-                    renderWeek(currentWeek);
-                }
-            });
-            
-            // Botão de reset
-            document.getElementById('reset-btn').addEventListener('click', function() {
-                if (confirm('Tem certeza que deseja reiniciar todo o progresso? Esta ação não pode ser desfeita.')) {
-                    completedTopics = {};
-                    localStorage.removeItem('enemScheduleProgress');
-                    renderWeek(currentWeek);
-                    updateStats();
-                    showNotification('Progresso reiniciado com sucesso!');
-                }
-            });
-            
-            // Botão de salvar (redundante, pois já salva automaticamente)
-            document.getElementById('save-btn').addEventListener('click', function() {
-                saveProgress();
-                showNotification('Checkpoint salvo com sucesso!');
-            });
-        }
-        
-        // Salvar progresso no localStorage
-        function saveProgress() {
-            const progressData = {
-                completedTopics: completedTopics,
-                lastSave: new Date().toISOString()
-            };
-            
-            localStorage.setItem('enemScheduleProgress', JSON.stringify(progressData));
-        }
-        
-        // Carregar progresso do localStorage
-        function loadProgress() {
-            const savedProgress = localStorage.getItem('enemScheduleProgress');
-            
-            if (savedProgress) {
-                try {
-                    const progressData = JSON.parse(savedProgress);
-                    completedTopics = progressData.completedTopics || {};
-                    
-                    // Verificar se há dados antigos e limpar se necessário
-                    const oneMonthAgo = new Date();
-                    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-                    
-                    if (progressData.lastSave && new Date(progressData.lastSave) < oneMonthAgo) {
-                        // Dados muito antigos, perguntar se quer manter
-                        if (!confirm('Seu progresso salvo é antigo. Deseja mantê-lo?')) {
-                            completedTopics = {};
-                            localStorage.removeItem('enemScheduleProgress');
+            window.custosChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categorias),
+                    datasets: [{
+                        data: Object.values(categorias),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                            '#9966FF', '#FF9F40', '#8AC926', '#1982C4'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
                         }
                     }
-                } catch (e) {
-                    console.error('Erro ao carregar progresso:', e);
-                    completedTopics = {};
                 }
+            });
+        }
+
+        // Vendas
+        function loadVendas() {
+            const tbody = document.querySelector('#vendasTable tbody');
+            tbody.innerHTML = '';
+
+            const vendas = db.getVendas();
+            
+            vendas.forEach(venda => {
+                const row = document.createElement('tr');
+                const total = venda.valor * venda.quantidade;
+                
+                row.innerHTML = `
+                    <td>${formatDate(venda.data)}</td>
+                    <td>${venda.produto}</td>
+                    <td>${venda.quantidade}</td>
+                    <td>${formatCurrency(venda.valor)}</td>
+                    <td class="text-success">${formatCurrency(total)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteVenda(${venda.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+
+            // Configurar cálculo automático do total
+            document.getElementById('vendaQuantidade').addEventListener('input', calcularTotalVenda);
+            document.getElementById('vendaPreco').addEventListener('input', calcularTotalVenda);
+            document.getElementById('vendaProduto').addEventListener('change', function() {
+                const precoPadrao = {
+                    'Coxinha': 5.00,
+                    'Empada': 4.50,
+                    'Rissole': 5.00,
+                    'Kibe': 4.00,
+                    'Pastel': 7.00,
+                    'Esfiha': 3.50
+                }[this.value];
+                
+                if (precoPadrao) {
+                    document.getElementById('vendaPreco').value = precoPadrao;
+                    calcularTotalVenda();
+                }
+            });
+
+            // Data padrão para hoje
+            document.getElementById('vendaData').value = new Date().toISOString().split('T')[0];
+        }
+
+        function calcularTotalVenda() {
+            const quantidade = parseInt(document.getElementById('vendaQuantidade').value) || 0;
+            const preco = parseFloat(document.getElementById('vendaPreco').value) || 0;
+            const total = quantidade * preco;
+            document.getElementById('vendaTotal').textContent = formatCurrency(total);
+        }
+
+        function deleteVenda(id) {
+            if (confirm('Tem certeza que deseja excluir esta venda?')) {
+                db.deleteVenda(id);
+                loadVendas();
+                loadDashboard();
             }
         }
-        
-        // Mostrar notificação
-        function showNotification(message) {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.style.display = 'block';
+
+        // Custos
+        function loadCustos() {
+            const tbody = document.querySelector('#custosTable tbody');
+            tbody.innerHTML = '';
+
+            const custos = db.getCustos();
             
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 3000);
+            custos.forEach(custo => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${formatDate(custo.data)}</td>
+                    <td>${custo.categoria}</td>
+                    <td>${custo.descricao} ${custo.quantidade ? `(${custo.quantidade})` : ''}</td>
+                    <td class="text-danger">${formatCurrency(custo.valor)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCusto(${custo.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+
+            // Data padrão para hoje
+            document.getElementById('custoData').value = new Date().toISOString().split('T')[0];
         }
+
+        function deleteCusto(id) {
+            if (confirm('Tem certeza que deseja excluir este custo?')) {
+                db.deleteCusto(id);
+                loadCustos();
+                loadDashboard();
+            }
+        }
+
+        // Estoque
+        function loadEstoque() {
+            const tbody = document.querySelector('#estoqueTable tbody');
+            const alertaTbody = document.querySelector('#alertaEstoqueTable tbody');
+            
+            tbody.innerHTML = '';
+            alertaTbody.innerHTML = '';
+
+            const estoque = db.getEstoque();
+            let temAlerta = false;
+
+            estoque.forEach(item => {
+                const row = document.createElement('tr');
+                const status = item.quantidade <= item.minimo ? 'Baixo' : 'OK';
+                const statusClass = item.quantidade <= item.minimo ? 'text-danger' : 'text-success';
+                
+                row.innerHTML = `
+                    <td>${item.nome}</td>
+                    <td>${item.quantidade} ${item.unidade}</td>
+                    <td>${item.unidade}</td>
+                    <td>${item.custo ? formatCurrency(item.custo) : '-'}</td>
+                    <td class="${statusClass}">${status}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteItemEstoque(${item.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+
+                // Adicionar alerta se estoque baixo
+                if (item.quantidade <= item.minimo) {
+                    temAlerta = true;
+                    const alertaRow = document.createElement('tr');
+                    alertaRow.innerHTML = `
+                        <td>${item.nome}</td>
+                        <td class="text-danger">${item.quantidade} ${item.unidade}</td>
+                        <td>${item.minimo} ${item.unidade}</td>
+                        <td class="text-danger">Reposição necessária!</td>
+                    `;
+                    alertaTbody.appendChild(alertaRow);
+                }
+            });
+
+            // Mostrar mensagem se não houver alertas
+            if (!temAlerta) {
+                alertaTbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-success">
+                            <i class="fas fa-check-circle"></i> Todos os itens com estoque adequado!
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function deleteItemEstoque(id) {
+            if (confirm('Tem certeza que deseja excluir este item do estoque?')) {
+                db.deleteItemEstoque(id);
+                loadEstoque();
+            }
+        }
+
+        // Relatórios
+        function loadRelatorios() {
+            // Data padrão: mês atual
+            const now = new Date();
+            const primeiroDia = new Date(now.getFullYear(), now.getMonth(), 1);
+            const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            document.getElementById('dataInicio').value = primeiroDia.toISOString().split('T')[0];
+            document.getElementById('dataFim').value = ultimoDia.toISOString().split('T')[0];
+            
+            gerarRelatorio();
+        }
+
+        function gerarRelatorio() {
+            const inicio = document.getElementById('dataInicio').value;
+            const fim = document.getElementById('dataFim').value;
+            
+            const vendas = db.getVendasPorPeriodo(inicio, fim);
+            const custos = db.getCustosPorPeriodo(inicio, fim);
+            
+            const totalVendas = vendas.reduce((sum, v) => sum + (v.valor * v.quantidade), 0);
+            const totalCustos = custos.reduce((sum, c) => sum + parseFloat(c.valor), 0);
+            const lucro = totalVendas - totalCustos;
+            const margem = totalVendas > 0 ? (lucro / totalVendas * 100).toFixed(1) : 0;
+
+            // Atualizar tabela de resumo
+            const tbody = document.querySelector('#resumoFinanceiro');
+            tbody.innerHTML = `
+                <tr>
+                    <td>${inicio ? formatDate(inicio) + ' a ' + formatDate(fim) : 'Período atual'}</td>
+                    <td class="text-success">${formatCurrency(totalVendas)}</td>
+                    <td class="text-danger">${formatCurrency(totalCustos)}</td>
+                    <td class="${lucro >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(lucro)}</td>
+                    <td class="${margem >= 0 ? 'text-success' : 'text-danger'}">${margem}%</td>
+                </tr>
+            `;
+
+            // Gerar gráfico de evolução
+            gerarGraficoEvolucao(inicio, fim);
+        }
+
+        function gerarGraficoEvolucao(inicio, fim) {
+            const ctx = document.getElementById('evolucaoLucroChart').getContext('2d');
+            
+            // Gerar dados fictícios para demonstração
+            const labels = [];
+            const dadosVendas = [];
+            const dadosCustos = [];
+            const dadosLucro = [];
+
+            const dataInicio = inicio ? new Date(inicio) : new Date();
+            const dataFim = fim ? new Date(fim) : new Date();
+            
+            // Criar 7 pontos de dados
+            for (let i = 0; i < 7; i++) {
+                const data = new Date(dataInicio);
+                data.setDate(data.getDate() + i);
+                
+                if (data <= dataFim) {
+                    labels.push(formatDate(data));
+                    
+                    // Gerar valores aleatórios para demonstração
+                    const venda = 500 + Math.random() * 500;
+                    const custo = 200 + Math.random() * 300;
+                    
+                    dadosVendas.push(venda);
+                    dadosCustos.push(custo);
+                    dadosLucro.push(venda - custo);
+                }
+            }
+
+            if (window.evolucaoLucroChart) {
+                window.evolucaoLucroChart.destroy();
+            }
+            
+            window.evolucaoLucroChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Vendas',
+                            data: dadosVendas,
+                            borderColor: '#1DD1A1',
+                            backgroundColor: 'rgba(29, 209, 161, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Custos',
+                            data: dadosCustos,
+                            borderColor: '#FF4757',
+                            backgroundColor: 'rgba(255, 71, 87, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Lucro',
+                            data: dadosLucro,
+                            borderColor: '#54A0FF',
+                            backgroundColor: 'rgba(84, 160, 255, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function exportarRelatorio() {
+            const inicio = document.getElementById('dataInicio').value;
+            const fim = document.getElementById('dataFim').value;
+            
+            const vendas = db.getVendasPorPeriodo(inicio, fim);
+            const custos = db.getCustosPorPeriodo(inicio, fim);
+            
+            let csv = 'Tipo,Data,Descrição,Valor\n';
+            
+            // Adicionar vendas
+            vendas.forEach(venda => {
+                csv += `Venda,${venda.data},"${venda.produto} - ${venda.quantidade} unidades",${venda.valor * venda.quantidade}\n`;
+            });
+            
+            // Adicionar custos
+            custos.forEach(custo => {
+                csv += `Custo,${custo.data},"${custo.categoria} - ${custo.descricao}",${custo.valor}\n`;
+            });
+            
+            // Criar arquivo para download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_salgados_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert('Relatório exportado com sucesso!');
+        }
+
+        // Event Listeners para formulários
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const messageDiv = document.getElementById('loginMessage');
+                
+                const result = await auth.login(email, password);
+                
+                if (result.success) {
+                    messageDiv.textContent = 'Login realizado! Entrando...';
+                    messageDiv.className = 'alert alert-success';
+                    messageDiv.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        document.getElementById('loginPage').style.display = 'none';
+                        document.getElementById('app').style.display = 'block';
+                        document.getElementById('userName').textContent = result.user.name;
+                        loadDashboard();
+                    }, 1000);
+                } else {
+                    messageDiv.textContent = result.error;
+                    messageDiv.className = 'alert alert-danger';
+                    messageDiv.style.display = 'block';
+                }
+            });
+
+            // Venda
+            document.getElementById('vendaForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const venda = {
+                    produto: document.getElementById('vendaProduto').value,
+                    quantidade: parseInt(document.getElementById('vendaQuantidade').value),
+                    valor: parseFloat(document.getElementById('vendaPreco').value),
+                    data: document.getElementById('vendaData').value,
+                    descricao: document.getElementById('vendaDescricao').value
+                };
+                
+                if (!venda.produto) {
+                    alert('Selecione um produto!');
+                    return;
+                }
+                
+                db.addVenda(venda);
+                
+                alert('Venda registrada com sucesso!');
+                this.reset();
+                document.getElementById('vendaData').value = new Date().toISOString().split('T')[0];
+                loadVendas();
+                showPage('dashboard');
+            });
+
+            // Custo
+            document.getElementById('custoForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const custo = {
+                    categoria: document.getElementById('custoCategoria').value,
+                    valor: parseFloat(document.getElementById('custoValor').value),
+                    descricao: document.getElementById('custoDescricao').value,
+                    data: document.getElementById('custoData').value,
+                    quantidade: document.getElementById('custoQuantidade').value || null
+                };
+                
+                if (!custo.categoria) {
+                    alert('Selecione uma categoria!');
+                    return;
+                }
+                
+                db.addCusto(custo);
+                
+                alert('Custo registrado com sucesso!');
+                this.reset();
+                document.getElementById('custoData').value = new Date().toISOString().split('T')[0];
+                loadCustos();
+                showPage('dashboard');
+            });
+
+            // Estoque
+            document.getElementById('estoqueForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const item = {
+                    nome: document.getElementById('itemNome').value,
+                    quantidade: parseFloat(document.getElementById('itemQuantidade').value),
+                    unidade: document.getElementById('itemUnidade').value,
+                    custo: document.getElementById('itemCusto').value ? parseFloat(document.getElementById('itemCusto').value) : null,
+                    minimo: document.getElementById('itemMinimo').value ? parseFloat(document.getElementById('itemMinimo').value) : 0
+                };
+                
+                db.addItemEstoque(item);
+                
+                alert('Item adicionado ao estoque!');
+                this.reset();
+                closeModal('estoqueModal');
+                loadEstoque();
+            });
+        });
+
+        // Logout
+        function logout() {
+            if (confirm('Tem certeza que deseja sair?')) {
+                auth.logout();
+                document.getElementById('app').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('loginForm').reset();
+                document.getElementById('loginMessage').style.display = 'none';
+            }
+        }
+
+        // Inicialização
+        window.onload = function() {
+            if (auth.isAuthenticated()) {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                document.getElementById('userName').textContent = auth.getUser().name;
+                loadDashboard();
+            } else {
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('app').style.display = 'none';
+            }
+
+            // Data padrão para formulários
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelectorAll('input[type="date"]').forEach(input => {
+                if (!input.value) input.value = today;
+            });
+        };
     </script>
 </body>
 </html>
