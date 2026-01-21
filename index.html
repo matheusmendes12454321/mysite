@@ -813,505 +813,912 @@
 
     <script>
         // CONFIGURAÇÃO LOCAL (sem Supabase por enquanto)
-        const isOnline = false; // Mude para true quando configurar Supabase
-        
-        let currentUser = null;
-        let produtos = [];
-        let vendas = [];
-        let custos = [];
-        
-        // FORMATAÇÃO
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            }).format(value || 0);
-        }
-        
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString('pt-BR');
-        }
-        
-        // FUNÇÕES DE PÁGINA
-        function showPage(pageId) {
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.getElementById(pageId + 'Page').classList.add('active');
-            
-            if (pageId === 'dashboard') loadDashboard();
-            if (pageId === 'produtos') loadProdutos();
-            if (pageId === 'vendas') loadVendas();
-            if (pageId === 'custos') loadCustos();
-        }
-        
-        // MODAL
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-        
-        // LOGIN/REGISTRO
-        function showLoginForm() {
-            document.getElementById('loginForm').classList.remove('d-none');
-            document.getElementById('registerForm').classList.add('d-none');
-        }
-        
-        function showRegisterForm() {
-            document.getElementById('loginForm').classList.add('d-none');
-            document.getElementById('registerForm').classList.remove('d-none');
-        }
-        
-        // AUTENTICAÇÃO LOCAL (para demonstração)
-        async function login(email, password) {
-            const messageDiv = document.getElementById('loginMessage');
-            
-            try {
-                // Simulação de login
-                currentUser = {
-                    id: Date.now(),
-                    email: email,
-                    name: email.split('@')[0]
-                };
-                
-                // Salvar no localStorage
-                localStorage.setItem('user', JSON.stringify(currentUser));
-                localStorage.setItem('produtos', JSON.stringify(produtos));
-                localStorage.setItem('vendas', JSON.stringify(vendas));
-                localStorage.setItem('custos', JSON.stringify(custos));
-                
-                // Mostrar app
-                document.getElementById('loginPage').classList.add('d-none');
-                document.getElementById('app').classList.remove('d-none');
-                
-                // Carregar dados
-                loadDashboard();
-                
-            } catch (error) {
-                messageDiv.textContent = error.message;
-                messageDiv.classList.remove('d-none');
-            }
-        }
-        
-        async function register(name, email, password, confirmPassword) {
-            const messageDiv = document.getElementById('registerMessage');
-            
-            if (password !== confirmPassword) {
-                messageDiv.textContent = 'As senhas não coincidem!';
-                messageDiv.classList.remove('d-none');
-                return;
-            }
-            
-            try {
-                // Simulação de registro
-                currentUser = {
-                    id: Date.now(),
-                    email: email,
-                    name: name
-                };
-                
-                localStorage.setItem('user', JSON.stringify(currentUser));
-                
-                messageDiv.textContent = 'Conta criada! Faça login.';
-                messageDiv.classList.remove('d-none');
-                showLoginForm();
-                document.getElementById('email').value = email;
-                
-            } catch (error) {
-                messageDiv.textContent = error.message;
-                messageDiv.classList.remove('d-none');
-            }
-        }
-        
-        function logout() {
-            if (confirm('Tem certeza que deseja sair?')) {
-                currentUser = null;
-                document.getElementById('app').classList.add('d-none');
-                document.getElementById('loginPage').classList.remove('d-none');
-                showLoginForm();
-            }
-        }
-        
-        // PRODUTOS
-        function loadProdutos() {
-            const produtosData = JSON.parse(localStorage.getItem('produtos')) || [];
-            const tbody = document.querySelector('#produtosTable tbody');
-            tbody.innerHTML = '';
-            
-            produtosData.forEach(produto => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${produto.nome}</td>
-                    <td>${formatCurrency(produto.preco)}</td>
-                    <td>${produto.custo ? formatCurrency(produto.custo) : '-'}</td>
-                    <td><span class="badge badge-venda">Ativo</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="deleteProduto(${produto.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Atualizar select de produtos nas vendas
-            atualizarSelectProdutos();
-        }
-        
-        function atualizarSelectProdutos() {
-            const produtosData = JSON.parse(localStorage.getItem('produtos')) || [];
-            const select = document.getElementById('vendaProduto');
-            select.innerHTML = '<option value="">Selecione um produto</option>';
-            
-            produtosData.forEach(produto => {
-                const option = document.createElement('option');
-                option.value = produto.id;
-                option.textContent = `${produto.nome} - ${formatCurrency(produto.preco)}`;
-                select.appendChild(option);
-            });
-        }
-        
-        function deleteProduto(id) {
-            if (confirm('Tem certeza que deseja excluir este produto?')) {
-                let produtosData = JSON.parse(localStorage.getItem('produtos')) || [];
-                produtosData = produtosData.filter(p => p.id !== id);
-                localStorage.setItem('produtos', JSON.stringify(produtosData));
-                loadProdutos();
-            }
-        }
-        
-        // VENDAS
-        function loadVendas() {
-            const vendasData = JSON.parse(localStorage.getItem('vendas')) || [];
-            const tbody = document.querySelector('#vendasTable tbody');
-            tbody.innerHTML = '';
-            
-            vendasData.forEach(venda => {
-                const row = document.createElement('tr');
-                const total = venda.valor * venda.quantidade;
-                
-                row.innerHTML = `
-                    <td>${formatDate(venda.data)}</td>
-                    <td>${venda.produtoNome || venda.descricao}</td>
-                    <td>${venda.quantidade}</td>
-                    <td>${formatCurrency(venda.valor)}</td>
-                    <td class="text-success">${formatCurrency(total)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="deleteVenda(${venda.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Data atual no formulário
-            document.getElementById('vendaData').value = new Date().toISOString().split('T')[0];
-            
-            // Configurar cálculo automático
-            document.getElementById('vendaQuantidade').addEventListener('input', calcularTotalVenda);
-            document.getElementById('vendaPreco').addEventListener('input', calcularTotalVenda);
-            
-            document.getElementById('vendaProduto').addEventListener('change', function() {
-                const produtoId = parseInt(this.value);
-                if (produtoId) {
-                    const produtosData = JSON.parse(localStorage.getItem('produtos')) || [];
-                    const produto = produtosData.find(p => p.id == produtoId);
-                    if (produto) {
-                        document.getElementById('vendaPreco').value = produto.preco;
-                        calcularTotalVenda();
-                    }
-                }
-            });
-        }
-        
-        function calcularTotalVenda() {
-            const quantidade = parseInt(document.getElementById('vendaQuantidade').value) || 0;
-            const preco = parseFloat(document.getElementById('vendaPreco').value) || 0;
-            const total = quantidade * preco;
-            document.getElementById('vendaTotal').textContent = formatCurrency(total);
-        }
-        
-        function deleteVenda(id) {
-            if (confirm('Tem certeza que deseja excluir esta venda?')) {
-                let vendasData = JSON.parse(localStorage.getItem('vendas')) || [];
-                vendasData = vendasData.filter(v => v.id !== id);
-                localStorage.setItem('vendas', JSON.stringify(vendasData));
-                loadVendas();
-                loadDashboard();
-            }
-        }
-        
-        // CUSTOS
-        function loadCustos() {
-            const custosData = JSON.parse(localStorage.getItem('custos')) || [];
-            const tbody = document.querySelector('#custosTable tbody');
-            tbody.innerHTML = '';
-            
-            custosData.forEach(custo => {
-                const row = document.createElement('tr');
-                
-                row.innerHTML = `
-                    <td>${formatDate(custo.data)}</td>
-                    <td>${custo.categoria}</td>
-                    <td>${custo.descricao} ${custo.quantidade ? `(${custo.quantidade})` : ''}</td>
-                    <td class="text-danger">${formatCurrency(custo.valor)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="deleteCusto(${custo.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            document.getElementById('custoData').value = new Date().toISOString().split('T')[0];
-        }
-        
-        function deleteCusto(id) {
-            if (confirm('Tem certeza que deseja excluir este custo?')) {
-                let custosData = JSON.parse(localStorage.getItem('custos')) || [];
-                custosData = custosData.filter(c => c.id !== id);
-                localStorage.setItem('custos', JSON.stringify(custosData));
-                loadCustos();
-                loadDashboard();
-            }
-        }
-        
-        // DASHBOARD
-        function loadDashboard() {
-            // Data atual
-            const now = new Date();
-            document.getElementById('currentDate').textContent = 
-                now.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            
-            // Carregar dados
-            const vendasData = JSON.parse(localStorage.getItem('vendas')) || [];
-            const custosData = JSON.parse(localStorage.getItem('custos')) || [];
-            
-            // Calcular totais do mês atual
-            const mesAtual = now.getMonth();
-            const anoAtual = now.getFullYear();
-            
-            const vendasMes = vendasData.filter(v => {
-                const dataVenda = new Date(v.data);
-                return dataVenda.getMonth() === mesAtual && dataVenda.getFullYear() === anoAtual;
-            });
-            
-            const custosMes = custosData.filter(c => {
-                const dataCusto = new Date(c.data);
-                return dataCusto.getMonth() === mesAtual && dataCusto.getFullYear() === anoAtual;
-            });
-            
-            const totalVendas = vendasMes.reduce((sum, v) => sum + (v.valor * v.quantidade), 0);
-            const totalCustos = custosMes.reduce((sum, c) => sum + parseFloat(c.valor), 0);
-            const totalLucro = totalVendas - totalCustos;
-            
-            // Atualizar cards
-            document.getElementById('totalVendas').textContent = formatCurrency(totalVendas);
-            document.getElementById('totalCustos').textContent = formatCurrency(totalCustos);
-            document.getElementById('totalLucro').textContent = formatCurrency(totalLucro);
-            
-            // Transações recentes
-            const todasTransacoes = [
-                ...vendasData.slice(0, 5).map(v => ({ 
-                    ...v, 
-                    tipo: 'venda',
-                    valorTotal: v.valor * v.quantidade
-                })),
-                ...custosData.slice(0, 3).map(c => ({ 
-                    ...c, 
-                    tipo: 'custo'
-                }))
-            ].sort((a, b) => new Date(b.data) - new Date(a.data));
-            
-            const tbody = document.querySelector('#recentTransactions tbody');
-            tbody.innerHTML = '';
-            
-            todasTransacoes.slice(0, 8).forEach(transacao => {
-                const row = document.createElement('tr');
-                const valor = transacao.tipo === 'venda' ? transacao.valorTotal : transacao.valor;
-                
-                row.innerHTML = `
-                    <td>${formatDate(transacao.data)}</td>
-                    <td><span class="badge ${transacao.tipo === 'venda' ? 'badge-venda' : 'badge-custo'}">
-                        ${transacao.tipo === 'venda' ? 'Venda' : 'Custo'}
-                    </span></td>
-                    <td>${transacao.produtoNome || transacao.descricao || transacao.categoria}</td>
-                    <td class="${transacao.tipo === 'venda' ? 'text-success' : 'text-danger'}">
-                        ${transacao.tipo === 'venda' ? '+' : '-'} ${formatCurrency(valor)}
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-        
-        // RELATÓRIOS
-        function gerarRelatorio() {
-            const inicio = document.getElementById('dataInicio').value;
-            const fim = document.getElementById('dataFim').value;
-            
-            const vendasData = JSON.parse(localStorage.getItem('vendas')) || [];
-            const custosData = JSON.parse(localStorage.getItem('custos')) || [];
-            
-            // Filtrar por período
-            let vendasFiltradas = vendasData;
-            let custosFiltrados = custosData;
-            
-            if (inicio) {
-                vendasFiltradas = vendasFiltradas.filter(v => v.data >= inicio);
-                custosFiltrados = custosFiltrados.filter(c => c.data >= inicio);
-            }
-            
-            if (fim) {
-                vendasFiltradas = vendasFiltradas.filter(v => v.data <= fim);
-                custosFiltrados = custosFiltrados.filter(c => c.data <= fim);
-            }
-            
-            const totalVendas = vendasFiltradas.reduce((sum, v) => sum + (v.valor * v.quantidade), 0);
-            const totalCustos = custosFiltrados.reduce((sum, c) => sum + parseFloat(c.valor), 0);
-            const lucro = totalVendas - totalCustos;
-            const margem = totalVendas > 0 ? (lucro / totalVendas * 100).toFixed(1) : 0;
-            
-            // Atualizar tabela
-            const tbody = document.querySelector('#resumoFinanceiro');
-            tbody.innerHTML = `
-                <tr>
-                    <td>${inicio ? formatDate(inicio) + ' a ' + formatDate(fim) : 'Período atual'}</td>
-                    <td class="text-success">${formatCurrency(totalVendas)}</td>
-                    <td class="text-danger">${formatCurrency(totalCustos)}</td>
-                    <td class="${lucro >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(lucro)}</td>
-                    <td class="${margem >= 0 ? 'text-success' : 'text-danger'}">${margem}%</td>
-                </tr>
-            `;
-        }
-        
-        // EVENT LISTENERS
-        document.addEventListener('DOMContentLoaded', function() {
-            // Verificar se já está logado
-            const savedUser = localStorage.getItem('user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                produtos = JSON.parse(localStorage.getItem('produtos')) || [];
-                vendas = JSON.parse(localStorage.getItem('vendas')) || [];
-                custos = JSON.parse(localStorage.getItem('custos')) || [];
-                
-                document.getElementById('loginPage').classList.add('d-none');
-                document.getElementById('app').classList.remove('d-none');
-                loadDashboard();
-                loadProdutos();
-            }
-            
-            // Login
-            document.getElementById('loginForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                login(email, password);
-            });
-            
-            // Registro
-            document.getElementById('registerForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const name = document.getElementById('registerName').value;
-                const email = document.getElementById('registerEmail').value;
-                const password = document.getElementById('registerPassword').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
-                register(name, email, password, confirmPassword);
-            });
-            
-            // Produto
-            document.getElementById('produtoForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const produto = {
-                    id: Date.now(),
-                    nome: document.getElementById('produtoNome').value,
-                    preco: parseFloat(document.getElementById('produtoPreco').value),
-                    custo: document.getElementById('produtoCusto').value ? parseFloat(document.getElementById('produtoCusto').value) : null
-                };
-                
-                let produtosData = JSON.parse(localStorage.getItem('produtos')) || [];
-                produtosData.push(produto);
-                localStorage.setItem('produtos', JSON.stringify(produtosData));
-                
-                alert('Produto cadastrado com sucesso!');
-                this.reset();
-                closeModal('produtoModal');
-                loadProdutos();
-            });
-            
-            // Venda
-            document.getElementById('vendaForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const produtoId = parseInt(document.getElementById('vendaProduto').value);
-                const produtosData = JSON.parse(localStorage.getItem('produtos')) || [];
-                const produto = produtosData.find(p => p.id == produtoId);
-                
-                const venda = {
-                    id: Date.now(),
-                    produtoId: produtoId,
-                    produtoNome: produto?.nome,
-                    descricao: document.getElementById('vendaDescricao').value,
-                    valor: parseFloat(document.getElementById('vendaPreco').value),
-                    quantidade: parseInt(document.getElementById('vendaQuantidade').value),
-                    data: document.getElementById('vendaData').value
-                };
-                
-                let vendasData = JSON.parse(localStorage.getItem('vendas')) || [];
-                vendasData.push(venda);
-                localStorage.setItem('vendas', JSON.stringify(vendasData));
-                
-                alert('Venda registrada com sucesso!');
-                this.reset();
-                document.getElementById('vendaData').value = new Date().toISOString().split('T')[0];
-                document.getElementById('vendaTotal').textContent = 'R$ 0,00';
-                
-                loadVendas();
-                showPage('dashboard');
-            });
-            
-            // Custo
-            document.getElementById('custoForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const custo = {
-                    id: Date.now(),
-                    categoria: document.getElementById('custoCategoria').value,
-                    descricao: document.getElementById('custoDescricao').value,
-                    valor: parseFloat(document.getElementById('custoValor').value),
-                    quantidade: document.getElementById('custoQuantidade').value || null,
-                    data: document.getElementById('custoData').value
-                };
-                
-                if (!custo.categoria) {
-                    alert('Selecione uma categoria!');
-                    return;
-                }
-                
-                let custosData = JSON.parse(localStorage.getItem('custos')) || [];
-                custosData.push(custo);
-                localStorage.setItem('custos', JSON.stringify(custosData));
-                
-                alert('Custo registrado com sucesso!');
-                this.reset();
-                document.getElementById('custoData').value = new Date().toISOString().split('T')[0];
-                
-                loadCustos();
-                showPage('dashboard');
-            });
-            
-            // Data padrão para formulários
-            const today = new Date().toISOString().split('T')[0];
-            document.querySelectorAll('input[type="date"]').forEach(input => {
-                if (!input.value) input.value = today;
-            });
+      // CONFIGURAÇÃO DO SUPABASE - SUBSTITUA COM SUAS CREDENCIAIS
+const SUPABASE_URL = 'https://sapnhhnazwhiulxxprrj.supabase.co'; // SUA URL
+const SUPABASE_ANON_KEY = 'sb_publishable_IzWWiA6Pi7HMy00TM6MtcA_eMD9Goxd'; // SUA CHAVE ANON KEY
+
+// Inicializar Supabase
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Estado da aplicação
+let currentUser = null;
+let produtos = [];
+let vendas = [];
+let custos = [];
+
+// ==================== FUNÇÕES DE FORMATAÇÃO ====================
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(value || 0);
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+}
+
+function formatNumber(value, decimals = 2) {
+    return parseFloat(value || 0).toFixed(decimals);
+}
+
+// ==================== FUNÇÕES DE PÁGINA ====================
+
+function showPage(pageId) {
+    // Atualizar menu ativo
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Mostrar página selecionada
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+    document.getElementById(pageId + 'Page').classList.add('active');
+
+    // Carregar dados da página
+    switch(pageId) {
+        case 'dashboard':
+            loadDashboard();
+            break;
+        case 'produtos':
+            loadProdutos();
+            break;
+        case 'vendas':
+            loadVendas();
+            break;
+        case 'custos':
+            loadCustos();
+            break;
+        case 'relatorios':
+            loadRelatorios();
+            break;
+    }
+}
+
+// ==================== FUNÇÕES DE MODAL ====================
+
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
+// ==================== FUNÇÕES DE LOGIN/REGISTRO ====================
+
+function showLoginForm() {
+    document.getElementById('loginForm').classList.remove('d-none');
+    document.getElementById('registerForm').classList.add('d-none');
+}
+
+function showRegisterForm() {
+    document.getElementById('loginForm').classList.add('d-none');
+    document.getElementById('registerForm').classList.remove('d-none');
+}
+
+// Autenticação com Supabase
+async function login(email, password) {
+    const messageDiv = document.getElementById('loginMessage');
+    messageDiv.textContent = 'Entrando...';
+    messageDiv.className = 'alert alert-info';
+    messageDiv.style.display = 'block';
+
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
         });
+
+        if (error) throw error;
+
+        currentUser = data.user;
+        
+        messageDiv.textContent = 'Login realizado! Entrando...';
+        messageDiv.className = 'alert alert-success';
+        
+        setTimeout(() => {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            loadDashboard();
+            loadProdutos();
+        }, 1000);
+
+    } catch (error) {
+        messageDiv.textContent = error.message;
+        messageDiv.className = 'alert alert-danger';
+    }
+}
+
+async function register(name, email, password, confirmPassword) {
+    const messageDiv = document.getElementById('registerMessage');
+    
+    if (password !== confirmPassword) {
+        messageDiv.textContent = 'As senhas não coincidem!';
+        messageDiv.className = 'alert alert-danger';
+        messageDiv.style.display = 'block';
+        return;
+    }
+
+    messageDiv.textContent = 'Criando conta...';
+    messageDiv.className = 'alert alert-info';
+    messageDiv.style.display = 'block';
+
+    try {
+        const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    name: name,
+                    created_at: new Date().toISOString()
+                }
+            }
+        });
+
+        if (error) throw error;
+
+        messageDiv.textContent = 'Conta criada com sucesso! Você pode fazer login agora.';
+        messageDiv.className = 'alert alert-success';
+        
+        setTimeout(() => {
+            showLoginForm();
+            document.getElementById('email').value = email;
+        }, 2000);
+
+    } catch (error) {
+        messageDiv.textContent = error.message;
+        messageDiv.className = 'alert alert-danger';
+    }
+}
+
+async function logout() {
+    if (confirm('Tem certeza que deseja sair?')) {
+        await supabase.auth.signOut();
+        currentUser = null;
+        
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('loginPage').style.display = 'flex';
+        document.getElementById('loginForm').reset();
+        document.getElementById('loginMessage').style.display = 'none';
+        showLoginForm();
+    }
+}
+
+// ==================== FUNÇÕES DE PRODUTOS (SUPABASE) ====================
+
+async function loadProdutos() {
+    if (!currentUser) return;
+    
+    try {
+        const { data, error } = await supabase
+            .from('produtos')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('nome');
+
+        if (error) throw error;
+
+        produtos = data || [];
+        atualizarTabelaProdutos();
+        atualizarSelectProdutos();
+
+    } catch (error) {
+        console.error('Erro ao carregar produtos:', error);
+        showAlert('error', 'Erro ao carregar produtos');
+    }
+}
+
+function atualizarTabelaProdutos() {
+    const tbody = document.querySelector('#produtosTable tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+
+    produtos.forEach(produto => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${produto.nome}</td>
+            <td>${formatCurrency(produto.preco)}</td>
+            <td>${produto.custo_medio ? formatCurrency(produto.custo_medio) : '-'}</td>
+            <td><span class="badge ${produto.ativo ? 'badge-venda' : 'badge-custo'}">
+                ${produto.ativo ? 'Ativo' : 'Inativo'}
+            </span></td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteProduto('${produto.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function atualizarSelectProdutos() {
+    const select = document.getElementById('vendaProduto');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Selecione um produto</option>';
+    
+    produtos.forEach(produto => {
+        if (produto.ativo) {
+            const option = document.createElement('option');
+            option.value = produto.id;
+            option.textContent = `${produto.nome} - ${formatCurrency(produto.preco)}`;
+            option.dataset.preco = produto.preco;
+            select.appendChild(option);
+        }
+    });
+}
+
+async function saveProduto(produtoData) {
+    try {
+        const produto = {
+            ...produtoData,
+            user_id: currentUser.id,
+            ativo: true
+        };
+
+        const { data, error } = await supabase
+            .from('produtos')
+            .insert([produto]);
+
+        if (error) throw error;
+
+        await loadProdutos();
+        return data[0];
+
+    } catch (error) {
+        console.error('Erro ao salvar produto:', error);
+        throw error;
+    }
+}
+
+async function deleteProduto(id) {
+    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+    
+    try {
+        const { error } = await supabase
+            .from('produtos')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        await loadProdutos();
+        showAlert('success', 'Produto excluído com sucesso!');
+
+    } catch (error) {
+        console.error('Erro ao excluir produto:', error);
+        showAlert('error', 'Erro ao excluir produto');
+    }
+}
+
+// ==================== FUNÇÕES DE VENDAS (SUPABASE) ====================
+
+async function loadVendas() {
+    if (!currentUser) return;
+    
+    try {
+        const { data, error } = await supabase
+            .from('transacoes')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .eq('tipo', 'venda')
+            .order('data', { ascending: false });
+
+        if (error) throw error;
+
+        vendas = data || [];
+        atualizarTabelaVendas();
+
+        // Configurar formulário
+        setupVendaForm();
+
+    } catch (error) {
+        console.error('Erro ao carregar vendas:', error);
+        showAlert('error', 'Erro ao carregar vendas');
+    }
+}
+
+function atualizarTabelaVendas() {
+    const tbody = document.querySelector('#vendasTable tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+
+    vendas.forEach(venda => {
+        const produto = produtos.find(p => p.id === venda.produto_id);
+        const total = venda.valor * venda.quantidade;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${formatDate(venda.data)}</td>
+            <td>${produto?.nome || venda.descricao}</td>
+            <td>${venda.quantidade}</td>
+            <td>${formatCurrency(venda.valor)}</td>
+            <td class="text-success">${formatCurrency(total)}</td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteVenda('${venda.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function setupVendaForm() {
+    // Data padrão
+    const vendaData = document.getElementById('vendaData');
+    if (vendaData) {
+        vendaData.value = new Date().toISOString().split('T')[0];
+    }
+
+    // Configurar cálculo automático
+    const quantidadeInput = document.getElementById('vendaQuantidade');
+    const precoInput = document.getElementById('vendaPreco');
+    
+    if (quantidadeInput && precoInput) {
+        quantidadeInput.addEventListener('input', calcularTotalVenda);
+        precoInput.addEventListener('input', calcularTotalVenda);
+    }
+
+    // Configurar seleção de produto
+    const produtoSelect = document.getElementById('vendaProduto');
+    if (produtoSelect) {
+        produtoSelect.addEventListener('change', function() {
+            const produtoId = this.value;
+            if (produtoId) {
+                const produto = produtos.find(p => p.id === produtoId);
+                if (produto && precoInput) {
+                    precoInput.value = produto.preco;
+                    calcularTotalVenda();
+                }
+            }
+        });
+    }
+}
+
+function calcularTotalVenda() {
+    const quantidade = parseInt(document.getElementById('vendaQuantidade')?.value) || 0;
+    const preco = parseFloat(document.getElementById('vendaPreco')?.value) || 0;
+    const total = quantidade * preco;
+    
+    const totalSpan = document.getElementById('vendaTotal');
+    if (totalSpan) {
+        totalSpan.textContent = formatCurrency(total);
+    }
+}
+
+async function saveVenda(vendaData) {
+    try {
+        const venda = {
+            ...vendaData,
+            user_id: currentUser.id,
+            tipo: 'venda'
+        };
+
+        const { data, error } = await supabase
+            .from('transacoes')
+            .insert([venda]);
+
+        if (error) throw error;
+
+        await loadVendas();
+        await loadDashboard();
+        return data[0];
+
+    } catch (error) {
+        console.error('Erro ao salvar venda:', error);
+        throw error;
+    }
+}
+
+async function deleteVenda(id) {
+    if (!confirm('Tem certeza que deseja excluir esta venda?')) return;
+    
+    try {
+        const { error } = await supabase
+            .from('transacoes')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', currentUser.id)
+            .eq('tipo', 'venda');
+
+        if (error) throw error;
+
+        await loadVendas();
+        await loadDashboard();
+        showAlert('success', 'Venda excluída com sucesso!');
+
+    } catch (error) {
+        console.error('Erro ao excluir venda:', error);
+        showAlert('error', 'Erro ao excluir venda');
+    }
+}
+
+// ==================== FUNÇÕES DE CUSTOS (SUPABASE) ====================
+
+async function loadCustos() {
+    if (!currentUser) return;
+    
+    try {
+        const { data, error } = await supabase
+            .from('transacoes')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .eq('tipo', 'custo')
+            .order('data', { ascending: false });
+
+        if (error) throw error;
+
+        custos = data || [];
+        atualizarTabelaCustos();
+
+        // Data padrão no formulário
+        const custoData = document.getElementById('custoData');
+        if (custoData) {
+            custoData.value = new Date().toISOString().split('T')[0];
+        }
+
+    } catch (error) {
+        console.error('Erro ao carregar custos:', error);
+        showAlert('error', 'Erro ao carregar custos');
+    }
+}
+
+function atualizarTabelaCustos() {
+    const tbody = document.querySelector('#custosTable tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+
+    custos.forEach(custo => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${formatDate(custo.data)}</td>
+            <td>${custo.categoria}</td>
+            <td>${custo.descricao} ${custo.quantidade ? `(${custo.quantidade})` : ''}</td>
+            <td class="text-danger">${formatCurrency(custo.valor)}</td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteCusto('${custo.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+async function saveCusto(custoData) {
+    try {
+        const custo = {
+            ...custoData,
+            user_id: currentUser.id,
+            tipo: 'custo'
+        };
+
+        const { data, error } = await supabase
+            .from('transacoes')
+            .insert([custo]);
+
+        if (error) throw error;
+
+        await loadCustos();
+        await loadDashboard();
+        return data[0];
+
+    } catch (error) {
+        console.error('Erro ao salvar custo:', error);
+        throw error;
+    }
+}
+
+async function deleteCusto(id) {
+    if (!confirm('Tem certeza que deseja excluir este custo?')) return;
+    
+    try {
+        const { error } = await supabase
+            .from('transacoes')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', currentUser.id)
+            .eq('tipo', 'custo');
+
+        if (error) throw error;
+
+        await loadCustos();
+        await loadDashboard();
+        showAlert('success', 'Custo excluído com sucesso!');
+
+    } catch (error) {
+        console.error('Erro ao excluir custo:', error);
+        showAlert('error', 'Erro ao excluir custo');
+    }
+}
+
+// ==================== FUNÇÕES DE DASHBOARD (SUPABASE) ====================
+
+async function loadDashboard() {
+    if (!currentUser) return;
+    
+    try {
+        // Atualizar data atual
+        const now = new Date();
+        const currentDateElement = document.getElementById('currentDate');
+        if (currentDateElement) {
+            currentDateElement.textContent = now.toLocaleDateString('pt-BR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+
+        // Buscar transações do mês atual
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+        const { data: transacoes, error } = await supabase
+            .from('transacoes')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .gte('data', firstDay)
+            .lte('data', lastDay);
+
+        if (error) throw error;
+
+        // Calcular totais
+        let totalVendas = 0;
+        let totalCustos = 0;
+
+        transacoes.forEach(transacao => {
+            if (transacao.tipo === 'venda') {
+                totalVendas += transacao.valor * transacao.quantidade;
+            } else if (transacao.tipo === 'custo') {
+                totalCustos += parseFloat(transacao.valor);
+            }
+        });
+
+        const totalLucro = totalVendas - totalCustos;
+
+        // Atualizar cards
+        updateDashboardCards(totalVendas, totalCustos, totalLucro);
+        
+        // Carregar transações recentes
+        await loadRecentTransactions();
+        
+        // Carregar gráfico de custos
+        loadCustosChart(transacoes);
+
+    } catch (error) {
+        console.error('Erro ao carregar dashboard:', error);
+        showAlert('error', 'Erro ao carregar dashboard');
+    }
+}
+
+function updateDashboardCards(vendas, custos, lucro) {
+    const vendasElement = document.getElementById('totalVendas');
+    const custosElement = document.getElementById('totalCustos');
+    const lucroElement = document.getElementById('totalLucro');
+    
+    if (vendasElement) vendasElement.textContent = formatCurrency(vendas);
+    if (custosElement) custosElement.textContent = formatCurrency(custos);
+    if (lucroElement) lucroElement.textContent = formatCurrency(lucro);
+}
+
+async function loadRecentTransactions() {
+    try {
+        const { data, error } = await supabase
+            .from('transacoes')
+            .select(`
+                *,
+                produtos (nome)
+            `)
+            .eq('user_id', currentUser.id)
+            .order('data', { ascending: false })
+            .limit(10);
+
+        if (error) throw error;
+
+        const tbody = document.querySelector('#recentTransactions tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+
+        data.forEach(transacao => {
+            const row = document.createElement('tr');
+            const valor = transacao.tipo === 'venda' 
+                ? transacao.valor * transacao.quantidade
+                : transacao.valor;
+            
+            const descricao = transacao.tipo === 'venda' 
+                ? `${transacao.produtos?.nome || transacao.descricao}`
+                : transacao.descricao;
+
+            row.innerHTML = `
+                <td>${formatDate(transacao.data)}</td>
+                <td><span class="badge ${transacao.tipo === 'venda' ? 'badge-venda' : 'badge-custo'}">
+                    ${transacao.tipo === 'venda' ? 'Venda' : 'Custo'}
+                </span></td>
+                <td>${descricao}</td>
+                <td class="${transacao.tipo === 'venda' ? 'text-success' : 'text-danger'}">
+                    ${transacao.tipo === 'venda' ? '+' : '-'} ${formatCurrency(valor)}
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error('Erro ao carregar transações recentes:', error);
+    }
+}
+
+function loadCustosChart(transacoes) {
+    const custosPorCategoria = {};
+    
+    transacoes
+        .filter(t => t.tipo === 'custo')
+        .forEach(t => {
+            custosPorCategoria[t.categoria] = (custosPorCategoria[t.categoria] || 0) + parseFloat(t.valor);
+        });
+
+    const ctx = document.getElementById('custosChart')?.getContext('2d');
+    if (!ctx) return;
+    
+    if (window.custosChart) {
+        window.custosChart.destroy();
+    }
+    
+    window.custosChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(custosPorCategoria),
+            datasets: [{
+                data: Object.values(custosPorCategoria),
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                    '#9966FF', '#FF9F40', '#8AC926', '#1982C4'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// ==================== FUNÇÕES DE RELATÓRIOS (SUPABASE) ====================
+
+async function loadRelatorios() {
+    // Data padrão: mês atual
+    const now = new Date();
+    const primeiroDia = new Date(now.getFullYear(), now.getMonth(), 1);
+    const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
+    const dataInicio = document.getElementById('dataInicio');
+    const dataFim = document.getElementById('dataFim');
+    
+    if (dataInicio) dataInicio.value = primeiroDia.toISOString().split('T')[0];
+    if (dataFim) dataFim.value = ultimoDia.toISOString().split('T')[0];
+    
+    await gerarRelatorio();
+}
+
+async function gerarRelatorio() {
+    if (!currentUser) return;
+    
+    const inicio = document.getElementById('dataInicio')?.value;
+    const fim = document.getElementById('dataFim')?.value;
+
+    try {
+        let query = supabase
+            .from('transacoes')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('data', { ascending: true });
+
+        if (inicio) query = query.gte('data', inicio);
+        if (fim) query = query.lte('data', fim);
+
+        const { data: transacoes, error } = await query;
+        if (error) throw error;
+
+        // Calcular totais
+        let totalVendas = 0;
+        let totalCustos = 0;
+
+        transacoes.forEach(transacao => {
+            if (transacao.tipo === 'venda') {
+                totalVendas += transacao.valor * transacao.quantidade;
+            } else if (transacao.tipo === 'custo') {
+                totalCustos += parseFloat(transacao.valor);
+            }
+        });
+
+        const lucro = totalVendas - totalCustos;
+        const margem = totalVendas > 0 ? (lucro / totalVendas * 100).toFixed(1) : 0;
+
+        // Atualizar tabela de resumo
+        atualizarResumoFinanceiro(inicio, fim, totalVendas, totalCustos, lucro, margem);
+
+    } catch (error) {
+        console.error('Erro ao gerar relatório:', error);
+        showAlert('error', 'Erro ao gerar relatório');
+    }
+}
+
+function atualizarResumoFinanceiro(inicio, fim, vendas, custos, lucro, margem) {
+    const tbody = document.querySelector('#resumoFinanceiro');
+    if (!tbody) return;
+    
+    tbody.innerHTML = `
+        <tr>
+            <td>${inicio ? formatDate(inicio) + ' a ' + formatDate(fim) : 'Período atual'}</td>
+            <td class="text-success">${formatCurrency(vendas)}</td>
+            <td class="text-danger">${formatCurrency(custos)}</td>
+            <td class="${lucro >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(lucro)}</td>
+            <td class="${margem >= 0 ? 'text-success' : 'text-danger'}">${margem}%</td>
+        </tr>
+    `;
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
+
+function showAlert(type, message) {
+    alert(message); // Pode ser substituído por um sistema de notificação mais sofisticado
+}
+
+// ==================== EVENT LISTENERS ====================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar autenticação
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+            currentUser = session.user;
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            
+            // Carregar dados iniciais
+            loadDashboard();
+            loadProdutos();
+        }
+    });
+
+    // Monitorar mudanças na autenticação
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT') {
+            currentUser = null;
+            document.getElementById('app').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
+        }
+    });
+
+    // Login
+    document.getElementById('loginForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        await login(email, password);
+    });
+
+    // Registro
+    document.getElementById('registerForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('registerName').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        await register(name, email, password, confirmPassword);
+    });
+
+    // Produto
+    document.getElementById('produtoForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const produto = {
+            nome: document.getElementById('produtoNome').value,
+            preco: parseFloat(document.getElementById('produtoPreco').value),
+            custo_medio: document.getElementById('produtoCusto').value ? 
+                parseFloat(document.getElementById('produtoCusto').value) : null
+        };
+
+        try {
+            await saveProduto(produto);
+            
+            alert('Produto cadastrado com sucesso!');
+            this.reset();
+            closeModal('produtoModal');
+            
+        } catch (error) {
+            alert('Erro ao salvar produto: ' + error.message);
+        }
+    });
+
+    // Venda
+    document.getElementById('vendaForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const produtoId = document.getElementById('vendaProduto').value;
+        
+        if (!produtoId) {
+            alert('Selecione um produto!');
+            return;
+        }
+
+        const produto = produtos.find(p => p.id === produtoId);
+        
+        const venda = {
+            produto_id: produtoId,
+            descricao: produto?.nome || document.getElementById('vendaDescricao').value,
+            valor: parseFloat(document.getElementById('vendaPreco').value),
+            quantidade: parseInt(document.getElementById('vendaQuantidade').value),
+            categoria: 'Venda Direta',
+            data: document.getElementById('vendaData').value
+        };
+
+        try {
+            await saveVenda(venda);
+            
+            alert('Venda registrada com sucesso!');
+            this.reset();
+            document.getElementById('vendaData').value = new Date().toISOString().split('T')[0];
+            document.getElementById('vendaTotal').textContent = 'R$ 0,00';
+            
+        } catch (error) {
+            alert('Erro ao registrar venda: ' + error.message);
+        }
+    });
+
+    // Custo
+    document.getElementById('custoForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const custo = {
+            categoria: document.getElementById('custoCategoria').value,
+            descricao: document.getElementById('custoDescricao').value,
+            valor: parseFloat(document.getElementById('custoValor').value),
+            quantidade: document.getElementById('custoQuantidade').value || null,
+            data: document.getElementById('custoData').value
+        };
+
+        if (!custo.categoria) {
+            alert('Selecione uma categoria!');
+            return;
+        }
+
+        try {
+            await saveCusto(custo);
+            
+            alert('Custo registrado com sucesso!');
+            this.reset();
+            document.getElementById('custoData').value = new Date().toISOString().split('T')[0];
+            
+        } catch (error) {
+            alert('Erro ao registrar custo: ' + error.message);
+        }
+    });
+
+    // Data padrão para formulários
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+        if (!input.value) input.value = today;
+    });
+});
     </script>
 </body>
 </html>
+
